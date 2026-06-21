@@ -212,17 +212,20 @@ export function HomeScreen() {
   };
   const handleAddChild = () => {
     setShowAddChild(true);
+    // Re-trigger QuickSetupGuide by resetting the guide flag
+    setShowGuide(true);
   };
 
   return (
     <div className="relative min-h-svh overflow-x-hidden w-full"
       style={{ backgroundColor: "var(--color-accent)", maxWidth: "640px" }}>
 
-      {/* 快速建档引导（首次使用） */}
+      {/* 快速建档引导（首次使用 或 点击添加孩子） */}
       <AnimatePresence>
-        {showGuide && !loading && (
+        {(showGuide || showAddChild) && !loading && (
           <QuickSetupGuide
             onComplete={(child) => {
+              setShowAddChild(false);
               setShowGuide(false);
               loadData();
             }}
@@ -347,18 +350,6 @@ export function HomeScreen() {
         open={showNote}
         onClose={() => setShowNote(false)}
         onSaved={() => loadData()}
-      />
-
-      <RecordEditorModal
-        open={showAddChild}
-        onClose={() => setShowAddChild(false)}
-        activeChild={null}
-        allChildren={children}
-        onSaved={() => loadData()}
-        onChildCreated={(child) => {
-          setShowAddChild(false);
-          loadData();
-        }}
       />
     </div>
   );
