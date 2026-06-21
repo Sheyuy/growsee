@@ -10,6 +10,7 @@ import type { GrowthRecord } from "@/types";
 import type { HeartLetter } from "@/types";
 import type { ParentMoodLog } from "@/types";
 import { QuickNoteSheet } from "@/components/QuickNoteSheet";
+import { RecordEditorModal } from "@/components/screens/RecordEditorModal";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
 
 // ── 类型 ───────────────────────────────────────────────
@@ -143,6 +144,7 @@ export function RecordScreen() {
   const [filter, setFilter] = useState<FilterType>("all");
   const [loading, setLoading] = useState(true);
   const [showNote, setShowNote] = useState(false);
+  const [showRecord, setShowRecord] = useState(false);
 
   const loadFeed = useCallback((c: Child | null) => {
     if (!c) { setFeed([]); return; }
@@ -218,10 +220,7 @@ export function RecordScreen() {
           </div>
           <div className="flex items-center gap-2">
             <motion.button whileTap={{ scale: 0.9 }}
-              onClick={() => setShowNote(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-white"
-              style={{ backgroundColor: "var(--color-primary)" }}>
-              <PenLine className="w-3 h-3" /> 记瞬间
+              onClick={() => setShowRecord(true)}
             </motion.button>
           </div>
         </div>
@@ -269,7 +268,7 @@ export function RecordScreen() {
               style={{ color: "var(--color-text-secondary)" }}>
               孩子今天说了什么、做了什么、让你感动的瞬间，都可以写在这里。
             </p>
-            <motion.button whileTap={{ scale: 0.96 }} onClick={() => setShowNote(true)}
+            <motion.button whileTap={{ scale: 0.96 }} onClick={() => setShowRecord(true)}
               className="px-5 py-2.5 rounded-xl text-sm font-medium text-white"
               style={{ backgroundColor: "var(--color-primary)" }}>
               写第一条记录
@@ -356,6 +355,14 @@ export function RecordScreen() {
       <QuickNoteSheet
         open={showNote}
         onClose={() => setShowNote(false)}
+        onSaved={() => child && loadFeed(child)}
+      />
+
+      <RecordEditorModal
+        open={showRecord}
+        onClose={() => setShowRecord(false)}
+        activeChild={child}
+        allChildren={allChildren}
         onSaved={() => child && loadFeed(child)}
       />
     </div>

@@ -182,6 +182,7 @@ export function HomeScreen() {
   const [recordsMap, setRecordsMap] = useState<Record<string, GrowthRecord[]>>({});
   const [loading, setLoading] = useState(true);
   const [showNote, setShowNote] = useState(false);
+  const [showRecord, setShowRecord] = useState(false);
   const [showAddChild, setShowAddChild] = useState(false);
   const [summary, setSummary] = useState<HomeSummary | null>(null);
   const [showGuide, setShowGuide] = useState(false);
@@ -208,7 +209,7 @@ export function HomeScreen() {
   }, [loadData]);
 
   const handleAddRecord = () => {
-    setShowNote(true);
+    setShowRecord(true);
   };
   const handleAddChild = () => {
     setShowAddChild(true);
@@ -254,8 +255,8 @@ export function HomeScreen() {
           <div className="flex items-center gap-2">
             {children.length > 0 && (
               <motion.button whileTap={{ scale: 0.9 }} onClick={handleAddRecord}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full border text-xs font-medium"
-                style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)", backgroundColor: "white" }}>
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium text-white"
+                style={{ backgroundColor: "var(--color-primary)" }}>
                 <Plus className="w-3 h-3" /> 记瞬间
               </motion.button>
             )}
@@ -362,6 +363,18 @@ export function HomeScreen() {
         open={showNote}
         onClose={() => setShowNote(false)}
         onSaved={() => loadData()}
+      />
+
+      <RecordEditorModal
+        open={showRecord}
+        onClose={() => setShowRecord(false)}
+        activeChild={null}
+        allChildren={children}
+        onSaved={() => loadData()}
+        onChildCreated={(child) => {
+          setShowRecord(false);
+          loadData();
+        }}
       />
     </div>
   );
