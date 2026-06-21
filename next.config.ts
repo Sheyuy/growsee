@@ -3,6 +3,11 @@ import type { NextConfig } from "next";
 const isProd = process.env.NODE_ENV === "production";
 const repoName = "growsee";
 
+// Expose basePath to client-side code (fetch calls etc.)
+if (isProd) {
+  process.env.NEXT_PUBLIC_BASE_PATH = `/${repoName}`;
+}
+
 const nextConfig: NextConfig = {
   output: "export",
   distDir: "dist",

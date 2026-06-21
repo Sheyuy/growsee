@@ -34,12 +34,13 @@ export async function initStore() {
   if (typeof window === "undefined") return;
   if (localStorage.getItem(LS_KEY.initialized)) return;
 
+  const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
   const [children, records, letters, moods, milestones] = await Promise.all([
-    fetch("/data/demo-children.json").then((r) => r.json()).catch(() => [] as Child[]),
-    fetch("/data/demo-records.json").then((r) => r.json()).catch(() => [] as GrowthRecord[]),
-    fetch("/data/demo-letters.json").then((r) => r.json()).catch(() => [] as HeartLetter[]),
-    fetch("/data/demo-mood.json").then((r) => r.json()).catch(() => [] as ParentMoodLog[]),
-    fetch("/data/demo-milestones.json").then((r) => r.json()).catch(() => [] as Milestone[]),
+    fetch(`${base}/data/demo-children.json`).then((r) => r.json()).catch(() => [] as Child[]),
+    fetch(`${base}/data/demo-records.json`).then((r) => r.json()).catch(() => [] as GrowthRecord[]),
+    fetch(`${base}/data/demo-letters.json`).then((r) => r.json()).catch(() => [] as HeartLetter[]),
+    fetch(`${base}/data/demo-mood.json`).then((r) => r.json()).catch(() => [] as ParentMoodLog[]),
+    fetch(`${base}/data/demo-milestones.json`).then((r) => r.json()).catch(() => [] as Milestone[]),
   ]);
 
   save(LS_KEY.children, children);
