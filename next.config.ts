@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const isProd = process.env.NODE_ENV === "production";
-const repoName = "yujian-app";
+const repoName = "growsee";
 
 const nextConfig: NextConfig = {
   output: "export",
