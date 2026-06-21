@@ -253,6 +253,13 @@ export function HomeScreen() {
           </div>
           <div className="flex items-center gap-2">
             {children.length > 0 && (
+              <motion.button whileTap={{ scale: 0.9 }} onClick={handleAddRecord}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full border text-xs font-medium"
+                style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)", backgroundColor: "white" }}>
+                <Plus className="w-3 h-3" /> 记瞬间
+              </motion.button>
+            )}
+            {children.length > 0 && (
               <motion.button whileTap={{ scale: 0.9 }} onClick={handleAddChild}
                 className="flex items-center gap-1 px-3 py-1.5 rounded-full border text-xs font-medium"
                 style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)", backgroundColor: "white" }}>
