@@ -22,6 +22,8 @@ export function QuickSetupGuide({ onComplete }: QuickSetupGuideProps) {
   const [nickname, setNickname] = useState("");
   const [gender, setGender] = useState("other");
   const [birthDate, setBirthDate] = useState("");
+  const [traits, setTraits] = useState("");
+  const [parentWish, setParentWish] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -37,8 +39,8 @@ export function QuickSetupGuide({ onComplete }: QuickSetupGuideProps) {
         birthDate: birthDate || null,
         avatarEmoji: "🌱",
         notes: null,
-        parentWish: null,
-        traits: null,
+        parentWish: parentWish.trim() || null,
+        traits: traits.trim() || null,
       });
       onComplete(child);
     } catch (e) {
@@ -148,6 +150,34 @@ export function QuickSetupGuide({ onComplete }: QuickSetupGuideProps) {
                 value={birthDate}
                 max={new Date().toISOString().slice(0, 10)}
                 onChange={e => setBirthDate(e.target.value)}
+              />
+            </div>
+
+            {/* 孩子特质（可选） */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium" style={{ color: "var(--color-text-secondary)" }}>
+                TA的特点 <span style={{ color: "var(--color-text-muted)" }}>（可选）</span>
+              </label>
+              <input
+                className="w-full px-4 py-3 rounded-xl text-base outline-none border"
+                style={{ background: "rgba(255,255,255,0.9)", borderColor: "var(--color-border)", color: "var(--color-text)" }}
+                placeholder="例如：特别爱笑，喜欢音乐"
+                value={traits}
+                onChange={e => setTraits(e.target.value)}
+              />
+            </div>
+
+            {/* 父母期待（可选） */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium" style={{ color: "var(--color-text-secondary)" }}>
+                对TA的期待 <span style={{ color: "var(--color-text-muted)" }}>（可选）</span>
+              </label>
+              <input
+                className="w-full px-4 py-3 rounded-xl text-base outline-none border"
+                style={{ background: "rgba(255,255,255,0.9)", borderColor: "var(--color-border)", color: "var(--color-text)" }}
+                placeholder="例如：愿你一直保持对世界的好奇"
+                value={parentWish}
+                onChange={e => setParentWish(e.target.value)}
               />
             </div>
 

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { MessageCircle, RefreshCw, Sparkles, Plus } from "lucide-react";
+import { MessageCircle, RefreshCw, Sparkles } from "lucide-react";
 import { QuickNoteSheet } from "@/components/QuickNoteSheet";
 
 interface InsightArticle {
@@ -190,17 +190,6 @@ export function ScientificInsightScreen() {
           </div>
         ) : articles.map(a => <ArticleCard key={a.id} article={a} />)}
       </div>
-
-      {/* 悬浮「记一下」按钮 */}
-      <motion.button
-        whileTap={{ scale: 0.9 }}
-        whileHover={{ scale: 1.05 }}
-        onClick={() => setShowNote(true)}
-        className="fixed bottom-20 right-5 md:bottom-8 w-14 h-14 rounded-full text-white shadow-lg flex items-center justify-center z-40"
-        style={{ backgroundColor: "var(--color-secondary)", boxShadow: "0 8px 24px rgba(211,110,82,0.3)" }}
-        aria-label="记一下">
-        <Plus className="w-6 h-6" strokeWidth={2.5} />
-      </motion.button>
 
       <QuickNoteSheet
         open={showNote}
