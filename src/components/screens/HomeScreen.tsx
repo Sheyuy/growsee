@@ -330,18 +330,18 @@ export function HomeScreen() {
               />
             ))}
           </AnimatePresence>
+        )}
 
-          {/* 添加孩子卡片 */}
-          {!loading && children.length > 0 && (
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={handleAddChild}
-              className="w-full rounded-3xl border flex items-center justify-center gap-2 py-3 mb-4"
-              style={{ backgroundColor: "rgba(255,255,255,0.5)", borderColor: "var(--color-border)", borderStyle: "dashed" }}>
-              <Plus className="w-4 h-4" style={{ color: "var(--color-text-muted)" }} />
-              <span className="text-sm font-medium" style={{ color: "var(--color-text-muted)" }}>添加孩子</span>
-            </motion.button>
-          )}
+        {/* 添加孩子卡片 */}
+        {!loading && children.length > 0 && (
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={handleAddChild}
+            className="w-full rounded-3xl border flex items-center justify-center gap-2 py-3 mb-4"
+            style={{ backgroundColor: "rgba(255,255,255,0.5)", borderColor: "var(--color-border)", borderStyle: "dashed" }}>
+            <Plus className="w-4 h-4" style={{ color: "var(--color-text-muted)" }} />
+            <span className="text-sm font-medium" style={{ color: "var(--color-text-muted)" }}>添加孩子</span>
+          </motion.button>
         )}
 
         <div className="h-24" />
