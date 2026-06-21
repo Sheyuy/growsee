@@ -11,3 +11,6 @@ __pycache__/
 *.pyc
 coverage/
 .DS_Store
+
+# 本地上传文件 (Demo 阶段)
+public/uploads/

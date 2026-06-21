@@ -2,11 +2,9 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Loader2, Check, HelpCircle, ImagePlus, XCircle } from "lucide-react";
-import { request } from "@/lib/api/request";
-import { storage } from "@eazo/sdk";
+import { X, Send, Loader2, Check, ImagePlus, XCircle } from "lucide-react";
 import { VoiceInputButton } from "@/components/VoiceInputButton";
-import type { AutoArchiveResult } from "@/app/api/records/auto-archive/route";
+import { addRecord, getChildren } from "@/lib/demo/store";
 
 const CATEGORY_LABELS: Record<string, string> = {
   behavior: "行为观察", emotion: "情绪状态", language: "语言发展",
@@ -19,12 +17,11 @@ interface QuickNoteSheetProps {
   onSaved?: () => void;
 }
 
-type Phase = "input" | "saving" | "confirm" | "done";
+type Phase = "input" | "saving" | "done";
 
 export function QuickNoteSheet({ open, onClose, onSaved }: QuickNoteSheetProps) {
   const [content, setContent] = useState("");
   const [phase, setPhase] = useState<Phase>("input");
-  const [result, setResult] = useState<AutoArchiveResult | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -34,7 +31,6 @@ export function QuickNoteSheet({ open, onClose, onSaved }: QuickNoteSheetProps) 
     if (open) {
       setContent("");
       setPhase("input");
-      setResult(null);
       setPhotoUrl(null);
       setTimeout(() => textareaRef.current?.focus(), 300);
     }
@@ -44,20 +40,20 @@ export function QuickNoteSheet({ open, onClose, onSaved }: QuickNoteSheetProps) 
     if (!content.trim() || phase === "saving") return;
     setPhase("saving");
     try {
-      const res = await request("/api/records/auto-archive", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, photoUrl }),
+      const children = getChildren();
+      const firstChild = children[0];
+      addRecord({
+        childId: firstChild?.id ?? null,
+        category: "other",
+        title: null,
+        content: content.trim(),
+        mood: null,
+        photoUrl: photoUrl ?? null,
+        recordedAt: new Date().toISOString(),
       });
-      const data: AutoArchiveResult = await res.json();
-      setResult(data);
-      if (data.needsConfirm) {
-        setPhase("confirm");
-      } else {
-        setPhase("done");
-        onSaved?.();
-        setTimeout(() => { onClose(); setPhase("input"); }, 1800);
-      }
+      setPhase("done");
+      onSaved?.();
+      setTimeout(() => { onClose(); setPhase("input"); }, 1800);
     } catch {
       setPhase("input");
     }
@@ -67,46 +63,17 @@ export function QuickNoteSheet({ open, onClose, onSaved }: QuickNoteSheetProps) 
     const file = e.target.files?.[0];
     if (!file) return;
     setPhotoUploading(true);
+    // Demo 模式：不上传图片，直接显示本地预览
     try {
-      const { url } = await storage.upload(`records/${Date.now()}-${file.name}`, file);
-      setPhotoUrl(url);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPhotoUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     } catch { /* 静默失败 */ } finally {
       setPhotoUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
-  };
-
-  const handleConfirm = async (confirmed: boolean) => {
-    if (!result) return;
-    setPhase("saving");
-    if (!confirmed) {
-      // 用户否认：childId 置空，重新保存
-      const res = await request("/api/records/auto-archive", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          content,
-          confirm: { childId: null, category: result.category, title: result.title },
-        }),
-      });
-      const data: AutoArchiveResult = await res.json();
-      setResult(data);
-    } else {
-      // 用户确认：用 AI 猜的结果保存
-      const res = await request("/api/records/auto-archive", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          content,
-          confirm: { childId: result.childId, category: result.category, title: result.title },
-        }),
-      });
-      const data: AutoArchiveResult = await res.json();
-      setResult(data);
-    }
-    setPhase("done");
-    onSaved?.();
-    setTimeout(() => { onClose(); setPhase("input"); }, 1800);
   };
 
   return (
@@ -198,7 +165,7 @@ export function QuickNoteSheet({ open, onClose, onSaved }: QuickNoteSheetProps) 
                         onTranscript={(t) => setContent(prev => prev ? prev + " " + t : t)}
                       />
                       <p className="text-[9px]" style={{ color: "var(--color-text-muted)" }}>
-                        AI 会自动判断关联谁、分什么类
+                        Demo 模式 — 自动保存到记录
                       </p>
                     </div>
                     <motion.button
@@ -206,8 +173,7 @@ export function QuickNoteSheet({ open, onClose, onSaved }: QuickNoteSheetProps) 
                       onClick={handleSubmit}
                       disabled={!content.trim() || phase === "saving"}
                       className="w-9 h-9 rounded-full flex items-center justify-center text-white"
-                      style={{ backgroundColor: content.trim() && phase !== "saving" ? "var(--color-primary)" : "var(--color-text-muted)" }}
-                    >
+                      style={{ backgroundColor: content.trim() && phase !== "saving" ? "var(--color-primary)" : "var(--color-text-muted)" }}>
                       {phase === "saving"
                         ? <Loader2 className="w-4 h-4 animate-spin" />
                         : <Send className="w-3.5 h-3.5" />
@@ -217,40 +183,8 @@ export function QuickNoteSheet({ open, onClose, onSaved }: QuickNoteSheetProps) 
                 </>
               )}
 
-              {/* ── 确认阶段 ── */}
-              {phase === "confirm" && result && (
-                <div className="py-3">
-                  <div className="flex items-center gap-2 mb-4">
-                    <HelpCircle className="w-5 h-5 shrink-0" style={{ color: "var(--color-secondary)" }} />
-                    <p className="text-sm font-medium" style={{ color: "var(--color-text-primary)" }}>
-                      {result.confirmPrompt ?? "这条记录关于哪个孩子？"}
-                    </p>
-                  </div>
-                  <div className="p-3 rounded-2xl mb-4 text-xs leading-relaxed line-clamp-3"
-                    style={{ backgroundColor: "rgba(255,255,255,0.7)", color: "var(--color-text-secondary)" }}>
-                    {content}
-                  </div>
-                  <div className="flex gap-2">
-                    <motion.button
-                      whileTap={{ scale: 0.96 }}
-                      onClick={() => handleConfirm(true)}
-                      className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white"
-                      style={{ backgroundColor: "var(--color-primary)" }}>
-                      是的，关于{result.childName ?? "他/她"}
-                    </motion.button>
-                    <motion.button
-                      whileTap={{ scale: 0.96 }}
-                      onClick={() => handleConfirm(false)}
-                      className="flex-1 py-2.5 rounded-xl text-sm font-medium border"
-                      style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)", backgroundColor: "white" }}>
-                      不，这是我自己的
-                    </motion.button>
-                  </div>
-                </div>
-              )}
-
               {/* ── 完成阶段 ── */}
-              {phase === "done" && result && (
+              {phase === "done" && (
                 <div className="py-6 text-center">
                   <motion.div
                     initial={{ scale: 0 }} animate={{ scale: 1 }}
@@ -264,9 +198,7 @@ export function QuickNoteSheet({ open, onClose, onSaved }: QuickNoteSheetProps) 
                     已记下来了
                   </p>
                   <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
-                    {result.childName
-                      ? `归到了${result.childName}的「${CATEGORY_LABELS[result.category] ?? "日常记录"}」`
-                      : `已保存为「${CATEGORY_LABELS[result.category] ?? "日常记录"}」`}
+                    已保存到「日常记录」
                   </p>
                 </div>
               )}

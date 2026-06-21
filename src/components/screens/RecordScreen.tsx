@@ -4,12 +4,11 @@ import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Star, Heart, BookOpen, PenLine, Smile } from "lucide-react";
-import { useEazo } from "@eazo/sdk/react";
-import { request } from "@/lib/api/request";
-import type { Child } from "@/lib/db/schema/children";
-import type { GrowthRecord } from "@/lib/db/schema/growth-records";
-import type { HeartLetter } from "@/lib/db/schema/heart-letters";
-import type { ParentMoodLog } from "@/lib/db/schema/parent-mood-logs";
+import { getChildren, getRecords, getLetters, getMoodLogs } from "@/lib/demo/store";
+import type { Child } from "@/types";
+import type { GrowthRecord } from "@/types";
+import type { HeartLetter } from "@/types";
+import type { ParentMoodLog } from "@/types";
 import { QuickNoteSheet } from "@/components/QuickNoteSheet";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
 
@@ -137,7 +136,6 @@ function LetterCard({ item }: { item: HeartLetter }) {
 // ── 主组件 ─────────────────────────────────────────────
 export function RecordScreen() {
   const router = useRouter();
-  const user = useEazo((s) => s.auth.user);
   const [allChildren, setAllChildren] = useState<Child[]>([]);
   const [child, setChild] = useState<Child | null>(null);
   const [feed, setFeed] = useState<FeedItem[]>([]);
@@ -146,18 +144,16 @@ export function RecordScreen() {
   const [loading, setLoading] = useState(true);
   const [showNote, setShowNote] = useState(false);
 
-  const loadFeed = useCallback(async (c: Child | null) => {
+  const loadFeed = useCallback((c: Child | null) => {
     if (!c) { setFeed([]); return; }
-    const [recsRes, lettersRes] = await Promise.all([
-      request(`/api/records?childId=${c.id}`).then(r => r.json()).catch(() => []),
-      request(`/api/heart-letters?childId=${c.id}`).then(r => r.json()).catch(() => []),
-    ]);
+    const recs = getRecords(c.id);
+    const letters = getLetters(c.id);
     const items: FeedItem[] = [
-      ...(recsRes as GrowthRecord[]).map(d => ({
+      ...(recs as GrowthRecord[]).map(d => ({
         kind: "record" as const, data: d,
         ts: new Date(d.recordedAt ?? d.createdAt).getTime(),
       })),
-      ...(lettersRes as HeartLetter[]).map(d => ({
+      ...(letters as HeartLetter[]).map(d => ({
         kind: "letter" as const, data: d,
         ts: new Date(d.createdAt).getTime(),
       })),
@@ -165,20 +161,15 @@ export function RecordScreen() {
     items.sort((a, b) => b.ts - a.ts);
     setFeed(items);
     // 同步拉取父母情绪记录（不关联具体孩子）
-    request("/api/mood").then(r => r.json())
-      .then(data => setMoodLogs(data.logs ?? []))
-      .catch(() => {});
+    setMoodLogs(getMoodLogs());
   }, []);
 
   useEffect(() => {
-    if (!user) return;
-    request("/api/children").then(r => r.json())
-      .then(async (data: Child[]) => {
-        setAllChildren(data);
-        if (data.length > 0) { setChild(data[0]); await loadFeed(data[0]); }
-        setLoading(false);
-      }).catch(() => setLoading(false));
-  }, [user, loadFeed]);
+    const data = getChildren();
+    setAllChildren(data);
+    if (data.length > 0) { setChild(data[0]); loadFeed(data[0]); }
+    setLoading(false);
+  }, [loadFeed]);
 
   const filtered = feed.filter(item => {
     if (filter === "all") return true;

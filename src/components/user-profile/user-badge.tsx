@@ -3,13 +3,23 @@
 import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import { LogOut, UserRound, X } from "lucide-react";
-import { auth } from "@eazo/sdk";
-import { useEazo } from "@eazo/sdk/react";
-import type { User } from "@eazo/sdk";
+
+// Placeholder user type
+interface PlaceholderUser {
+  id: string;
+  name: string | null;
+  email: string | null;
+  avatarUrl: string | null;
+}
 
 export function UserBadge() {
-  const user = useEazo((s) => s.auth.user);
-  const loading = useEazo((s) => s.auth.loading);
+  // Mini-program auto-login via WeChat: assume user is always logged in
+  const [user] = useState<PlaceholderUser | null>({
+    id: "mp-user",
+    name: "我",
+    email: null,
+    avatarUrl: null,
+  });
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -21,19 +31,11 @@ export function UserBadge() {
     return () => document.removeEventListener("mousedown", handle);
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex h-9 items-center rounded-full border border-border bg-background px-3 shadow-sm">
-        <div className="size-4 animate-spin rounded-full border-2 border-muted border-t-muted-foreground" />
-      </div>
-    );
-  }
-
   if (!user) {
     return (
       <button
         onClick={() => {
-          auth.login().catch(() => undefined);
+          console.log("[auth] login placeholder — mini-program auto-login via WeChat");
         }}
         className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium shadow-sm transition-shadow hover:shadow-md"
       >
@@ -50,7 +52,7 @@ export function UserBadge() {
         <DropdownPanel user={user} onClose={() => setOpen(false)}>
           <button
             onClick={() => {
-              auth.logout();
+              console.log("[auth] logout placeholder — no-op in mini-program");
               setOpen(false);
             }}
             className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -64,7 +66,7 @@ export function UserBadge() {
   );
 }
 
-function BadgeTrigger({ user, onClick }: { user: User; onClick: () => void }) {
+function BadgeTrigger({ user, onClick }: { user: PlaceholderUser; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -83,7 +85,7 @@ function DropdownPanel({
   onClose,
   children,
 }: {
-  user: User;
+  user: PlaceholderUser;
   onClose: () => void;
   children?: React.ReactNode;
 }) {
@@ -116,7 +118,7 @@ function DropdownPanel({
   );
 }
 
-function Avatar({ user, size }: { user: User; size: number }) {
+function Avatar({ user, size }: { user: PlaceholderUser; size: number }) {
   if (user.avatarUrl) {
     const avatarSrc = user.avatarUrl.startsWith("//")
       ? `https:${user.avatarUrl}`

@@ -4,10 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import { useEazo } from "@eazo/sdk/react";
-import { request } from "@/lib/api/request";
-import { memory } from "@eazo/sdk";
-import type { ParentMoodLog } from "@/lib/db/schema/parent-mood-logs";
+import { getMoodLogs, addMoodLog } from "@/lib/demo/store";
+import type { ParentMoodLog } from "@/types";
 
 const MOODS = [
   { value: "happy", emoji: "😄", label: "开心", color: "#FFD93D" },
@@ -37,8 +35,6 @@ function formatTime(dateStr: string): string {
 
 export function MoodScreen() {
   const router = useRouter();
-  const user = useEazo((s) => s.auth.user);
-  const authLoading = useEazo((s) => s.auth.loading);
   const [logs, setLogs] = useState<ParentMoodLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMood, setSelectedMood] = useState("");
@@ -46,44 +42,33 @@ export function MoodScreen() {
   const [saving, setSaving] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
 
-  const loadLogs = useCallback(async () => {
+  const loadLogs = useCallback(() => {
     try {
-      const res = await request("/api/mood");
-      const data = await res.json();
-      setLogs(data.logs ?? []);
+      setLogs(getMoodLogs());
     } catch { }
     setLoading(false);
   }, []);
 
   useEffect(() => {
-    if (authLoading) return;
-    if (user) loadLogs();
-  }, [authLoading, user, loadLogs]);
+    loadLogs();
+  }, [loadLogs]);
 
-  async function handleSave() {
+  function handleSave() {
     if (!selectedMood) return;
     setSaving(true);
     try {
-      await request("/api/mood", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mood: selectedMood, note: note.trim() || undefined }),
+      addMoodLog({
+        mood: selectedMood,
+        note: note.trim() || null,
+        childId: null,
+        loggedAt: new Date().toISOString(),
       });
-      memory.reportAction({ content: `父母情绪打卡：${selectedMood}`, event_type: "create", page: "mood", metadata: { mood: selectedMood } }).catch(() => {});
       setSelectedMood("");
       setNote("");
-      await loadLogs();
+      loadLogs();
     } catch { } finally {
       setSaving(false);
     }
-  }
-
-  if (!user && !authLoading) {
-    return (
-      <div className="flex items-center justify-center h-svh" style={{ background: "var(--color-accent)" }}>
-        <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>请先登录</p>
-      </div>
-    );
   }
 
   return (

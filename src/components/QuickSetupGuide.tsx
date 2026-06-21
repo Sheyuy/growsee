@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, ChevronRight } from "lucide-react";
-import { request } from "@/lib/api/request";
-import { memory } from "@eazo/sdk";
-import type { Child } from "@/lib/db/schema/children";
+import { addChild } from "@/lib/demo/store";
+import type { Child } from "@/types";
 
 interface QuickSetupGuideProps {
   onComplete: (child: Child) => void;
@@ -26,22 +25,21 @@ export function QuickSetupGuide({ onComplete }: QuickSetupGuideProps) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleCreate() {
+  function handleCreate() {
     if (!name.trim()) { setError("请输入孩子的名字"); return; }
     setSaving(true);
     setError("");
     try {
-      const res = await request("/api/children", {
-        method: "POST",
-        body: JSON.stringify({
-          name: name.trim(),
-          nickname: nickname.trim() || null,
-          gender,
-          birthDate: birthDate || null,
-        }),
+      const child = addChild({
+        name: name.trim(),
+        nickname: nickname.trim() || null,
+        gender: gender as "boy" | "girl" | "other",
+        birthDate: birthDate || null,
+        avatarEmoji: "🌱",
+        notes: null,
+        parentWish: null,
+        traits: null,
       });
-      const child: Child = await res.json();
-      memory.reportAction({ content: `建立孩子档案：${child.name}`, event_type: "create", page: "setup", metadata: { name: child.name } });
       onComplete(child);
     } catch (e) {
       setError("建档失败，请重试");

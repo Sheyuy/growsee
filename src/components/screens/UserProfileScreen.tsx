@@ -3,10 +3,8 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Loader2, User, Heart, BookOpen } from "lucide-react";
-import { useEazo } from "@eazo/sdk/react";
-import { request } from "@/lib/api/request";
-import type { User as DbUser } from "@/lib/db/schema/users";
+import { ArrowLeft, Check, Loader2, User } from "lucide-react";
+import { getHomeSummary, resetStore } from "@/lib/demo/store";
 
 const ROLES = [
   { value: "mom",         label: "妈妈",   emoji: "👩" },
@@ -17,8 +15,6 @@ const ROLES = [
 
 export function UserProfileScreen() {
   const router = useRouter();
-  const eazoUser = useEazo((s) => s.auth.user);
-  const [profile, setProfile] = useState<DbUser | null>(null);
   const [role, setRole] = useState("");
   const [bio, setBio] = useState("");
   const [familyNote, setFamilyNote] = useState("");
@@ -26,31 +22,36 @@ export function UserProfileScreen() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    if (!eazoUser) return;
-    request("/api/user/profile").then(r => r.json())
-      .then(({ user }) => {
-        setProfile(user);
-        setRole(user.role ?? "");
-        setBio(user.bio ?? "");
-        setFamilyNote(user.familyNote ?? "");
-      }).catch(() => {});
-  }, [eazoUser]);
+    // 从本地存储加载（如果有的话）
+    const saved = localStorage.getItem("growsee.profile");
+    if (saved) {
+      try {
+        const p = JSON.parse(saved);
+        setRole(p.role ?? "");
+        setBio(p.bio ?? "");
+        setFamilyNote(p.familyNote ?? "");
+      } catch { /* ignore */ }
+    }
+  }, []);
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setSaving(true);
     try {
-      await request("/api/user/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: role || null, bio: bio.trim() || null, familyNote: familyNote.trim() || null }),
-      });
+      localStorage.setItem("growsee.profile", JSON.stringify({ role, bio, familyNote }));
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch { } finally { setSaving(false); }
   };
 
-  const displayName = profile?.name ?? eazoUser?.name ?? "你";
-  const avatarUrl = profile?.avatarUrl ?? eazoUser?.avatarUrl;
+  const handleReset = () => {
+    if (confirm("确定要重置所有数据吗？这将清空所有孩子、记录、悄悄话和心情记录。")) {
+      resetStore();
+      window.location.reload();
+    }
+  };
+
+  const displayName = "演示用户";
+  const summary = getHomeSummary();
 
   return (
     <div className="min-h-svh" style={{ backgroundColor: "var(--color-accent)" }}>
@@ -74,23 +75,18 @@ export function UserProfileScreen() {
       </header>
 
       <div className="px-5 py-6 space-y-6 pb-24">
-        {/* 头像 + 名字（只读，来自 Eazo 账号） */}
+        {/* 头像 + 名字 */}
         <div className="flex items-center gap-4 p-4 rounded-2xl border bg-white/70"
           style={{ borderColor: "var(--color-border)" }}>
-          {avatarUrl
-            ? <img src={avatarUrl} alt={displayName} className="w-14 h-14 rounded-full object-cover" />
-            : <div className="w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold"
-                style={{ backgroundColor: "var(--color-primary)" }}>
-                {displayName.slice(0, 1)}
-              </div>
-          }
+          <div className="w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold"
+            style={{ backgroundColor: "var(--color-primary)" }}>
+            {displayName.slice(0, 1)}
+          </div>
           <div>
             <p className="text-base font-semibold" style={{ color: "var(--color-text-primary)" }}>{displayName}</p>
-            {profile?.email && (
-              <p className="text-xs mt-0.5" style={{ color: "var(--color-text-muted)" }}>{profile.email}</p>
-            )}
+            <p className="text-xs mt-0.5" style={{ color: "var(--color-text-muted)" }}>Demo 演示模式</p>
             <p className="text-[10px] mt-1" style={{ color: "var(--color-text-muted)" }}>
-              昵称和头像通过 Eazo 账号管理
+              {summary.childCount} 个孩子 · {summary.recordCount} 条记录 · {summary.letterCount} 封悄悄话
             </p>
           </div>
         </div>
@@ -158,9 +154,22 @@ export function UserProfileScreen() {
           <div className="flex items-start gap-3">
             <User className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "var(--color-primary)" }} />
             <p className="text-[10px] leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
-              这里的信息只用于让 AI 更好地理解你的情况，不会对外展示，也不会用于任何商业目的。你可以随时修改或清空。
+              这里的信息只用于让 AI 更好地理解你的情况，不会对外展示。Demo 模式下数据保存在浏览器本地，关闭页面后不会丢失。
             </p>
           </div>
+        </div>
+
+        {/* 重置数据 */}
+        <div className="pt-4 border-t" style={{ borderColor: "var(--color-border)" }}>
+          <button
+            onClick={handleReset}
+            className="w-full py-3 rounded-2xl text-sm font-medium border"
+            style={{ borderColor: "rgba(211,110,82,0.3)", color: "var(--color-secondary)", backgroundColor: "rgba(211,110,82,0.05)" }}>
+            🔄 重置所有演示数据
+          </button>
+          <p className="text-[9px] text-center mt-2" style={{ color: "var(--color-text-muted)" }}>
+            这会清空所有本地数据并重新加载示范数据
+          </p>
         </div>
       </div>
     </div>

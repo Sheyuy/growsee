@@ -1,0 +1,34 @@
+[
+  {
+    "id": "ms-01",
+    "childId": "child-01",
+    "title": "第一次叫「妈妈」",
+    "date": "2023-06-20",
+    "category": "language",
+    "description": "在餐椅上突然清晰地叫了一声「妈妈」，随后又重复了一遍。"
+  },
+  {
+    "id": "ms-02",
+    "childId": "child-01",
+    "title": "第一次独立走路",
+    "date": "2023-04-15",
+    "category": "physical",
+    "description": "扶着沙发走了几步，然后松手自己走了5步才摔倒。"
+  },
+  {
+    "id": "ms-03",
+    "childId": "child-02",
+    "title": "开始上幼儿园",
+    "date": "2023-09-01",
+    "category": "social",
+    "description": "第一天哭得很厉害，但第二天就好多了，一周后完全适应。"
+  },
+  {
+    "id": "ms-04",
+    "childId": "child-02",
+    "title": "第一次骑自行车（不用辅助轮）",
+    "date": "2025-04-10",
+    "category": "physical",
+    "description": "在小区里练习了一个周末，终于可以独立骑完整圈。"
+  }
+]

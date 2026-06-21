@@ -1,10 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Noto_Sans_SC, Noto_Serif_SC } from "next/font/google";
-import { EazoProvider } from "@eazo/sdk/react";
 import { cn } from "@/utils/utils";
 import { Toaster } from "@/components/ui/sonner";
-import { UserSyncEffect } from "@/components/user-profile/user-sync-effect";
 import { BottomTabBar, SidebarNav } from "@/components/nav/AppNav";
 
 const notoSans = Noto_Sans_SC({
@@ -37,7 +35,7 @@ export const metadata: Metadata = {
   title: SITE_TITLE,
   description: SITE_DESCRIPTION,
   icons: {
-    icon: "https://eazo.ai/favicon.ico",
+    icon: "/favicon.ico",
   },
   // Social preview cards (Open Graph + Twitter). Most platforms (X,
   // Facebook, LinkedIn, Slack, Discord, WeChat, iMessage) read these
@@ -46,11 +44,11 @@ export const metadata: Metadata = {
   // metadata and overrides `openGraph.images` below at build time.
   openGraph: {
     type: "website",
-    siteName: "Eazo",
+    siteName: "Growsee",
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
     url: "/",
-    locale: "en_US",
+    locale: "zh_CN",
   },
   twitter: {
     card: "summary_large_image",
@@ -77,24 +75,21 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="min-h-svh flex flex-col bg-[var(--color-accent)]">
-        <EazoProvider>
-          <UserSyncEffect />
-          <div className="flex min-h-svh">
-            {/* Desktop sidebar */}
-            <aside className="hidden md:flex md:w-60 md:flex-col md:fixed md:inset-y-0 bg-[#FDFAF4] border-r border-[var(--color-border)]">
-              <SidebarNav />
-            </aside>
-            {/* Main content */}
-            <main className="flex-1 md:ml-60 pb-16 md:pb-0 flex flex-col min-h-0">
-              <div className="w-full max-w-[640px] mx-auto flex flex-col flex-1 min-h-0">
-                {children}
-              </div>
-            </main>
-            {/* Mobile bottom tab bar */}
-            <BottomTabBar />
-          </div>
-          <Toaster />
-        </EazoProvider>
+        <div className="flex min-h-svh">
+          {/* Desktop sidebar */}
+          <aside className="hidden md:flex md:w-60 md:flex-col md:fixed md:inset-y-0 bg-[#FDFAF4] border-r border-[var(--color-border)]">
+            <SidebarNav />
+          </aside>
+          {/* Main content */}
+          <main className="flex-1 md:ml-60 pb-16 md:pb-0 flex flex-col min-h-0">
+            <div className="w-full max-w-[640px] mx-auto flex flex-col flex-1 min-h-0">
+              {children}
+            </div>
+          </main>
+          {/* Mobile bottom tab bar */}
+          <BottomTabBar />
+        </div>
+        <Toaster />
       </body>
     </html>
   );

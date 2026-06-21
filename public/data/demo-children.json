@@ -1,0 +1,22 @@
+[
+  {
+    "id": "child-01",
+    "name": "小雨",
+    "nickname": "小雨",
+    "birthDate": "2022-03-15",
+    "gender": "girl",
+    "avatarEmoji": "🐰",
+    "traits": "特别爱笑，喜欢音乐，能记住很多童谣",
+    "parentWish": "愿你一直保持对世界的好奇"
+  },
+  {
+    "id": "child-02",
+    "name": "小阳",
+    "nickname": "小阳",
+    "birthDate": "2020-07-20",
+    "gender": "boy",
+    "avatarEmoji": "🦁",
+    "traits": "精力旺盛，喜欢搭积木，对数字很敏感",
+    "parentWish": "希望你慢慢长大，不着急"
+  }
+]

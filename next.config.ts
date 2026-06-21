@@ -1,16 +1,22 @@
 import type { NextConfig } from "next";
 
+const isProd = process.env.NODE_ENV === "production";
+const repoName = "yujian-app";
+
 const nextConfig: NextConfig = {
+  output: "export",
+  distDir: "dist",
   images: {
     unoptimized: true,
   },
-  // Pull the local `@eazo/sdk` (hard-copied into node_modules by
-  // `bun run sdk:sync`) into Next's watch + transpile graph. Without
-  // this, changes inside `node_modules/@eazo/sdk/dist/` don't trigger
-  // HMR — the `bun run sdk:watch` workflow would still require a manual
-  // `next dev` restart on every SDK edit. With this flag, Turbopack
-  // re-bundles + the browser refreshes automatically.
-  transpilePackages: ["@eazo/sdk"],
+  // GitHub Pages serves under /repo-name/, so we need basePath in production.
+  // Local dev stays at root (basePath=undefined).
+  ...(isProd
+    ? {
+        basePath: `/${repoName}`,
+        assetPrefix: `/${repoName}/`,
+      }
+    : {}),
   // RFC1918 LAN ranges + localhost for `next dev` HMR over Wi-Fi.
   allowedDevOrigins: [
     "localhost",

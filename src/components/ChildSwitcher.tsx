@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
-import type { Child } from "@/lib/db/schema/children";
+import type { Child } from "@/types";
 
 interface ChildSwitcherProps {
   children: Child[];

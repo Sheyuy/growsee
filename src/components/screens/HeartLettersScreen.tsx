@@ -4,11 +4,9 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, X, Loader2, Lock, Heart } from "lucide-react";
-import { useEazo } from "@eazo/sdk/react";
-import { request } from "@/lib/api/request";
-import { memory } from "@eazo/sdk";
-import type { Child } from "@/lib/db/schema/children";
-import type { HeartLetter } from "@/lib/db/schema/heart-letters";
+import { getChildren, getLetters, addLetter, deleteLetter } from "@/lib/demo/store";
+import type { Child } from "@/types";
+import type { HeartLetter } from "@/types";
 
 const EMOTIONS = [
   { value: "joy", label: "欣喜", emoji: "✨", desc: "那一刻你特别高兴" },
@@ -101,21 +99,18 @@ function AddLetterSheet({ open, onClose, childId, childName, onSaved }: {
 
   const reset = () => { setTitle(""); setContent(""); setEmotion("joy"); setIsTimeCapsule(false); };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!content.trim()) return;
     setSaving(true);
     try {
-      await request("/api/heart-letters", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ childId, emotion, title: title.trim() || null, content: content.trim(), isTimeCapsule, revealAtAge: isTimeCapsule ? revealAtAge : null }),
+      addLetter({
+        childId,
+        emotion,
+        title: title.trim() || null,
+        content: content.trim(),
+        isTimeCapsule,
+        revealAtAge: isTimeCapsule ? revealAtAge : null,
       });
-      memory.reportAction({
-        content: `用户为 ${childName} 写了一封悄悄话 (${emotion})`,
-        event_type: "create",
-        page: "heart-letters",
-        metadata: { type: "create_heart_letter", child_id: childId, emotion, is_time_capsule: isTimeCapsule },
-      }).catch(() => {});
       reset(); onSaved(); onClose();
     } catch { } finally { setSaving(false); }
   };
@@ -256,30 +251,25 @@ function AddLetterSheet({ open, onClose, childId, childName, onSaved }: {
 
 export function HeartLettersScreen() {
   const router = useRouter();
-  const user = useEazo((s) => s.auth.user);
   const [child, setChild] = useState<Child | null>(null);
   const [letters, setLetters] = useState<HeartLetter[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
 
-  const loadLetters = async (c: Child) => {
-    const res = await request(`/api/heart-letters?childId=${c.id}`);
-    const data: HeartLetter[] = await res.json();
+  const loadLetters = (c: Child) => {
+    const data = getLetters(c.id);
     setLetters(data);
   };
 
   useEffect(() => {
-    if (!user) return;
-    request("/api/children").then((r) => r.json())
-      .then(async (data: Child[]) => {
-        if (data.length > 0) { setChild(data[0]); await loadLetters(data[0]); }
-        setLoading(false);
-      }).catch(() => setLoading(false));
-  }, [user]);
+    const data = getChildren();
+    if (data.length > 0) { setChild(data[0]); loadLetters(data[0]); }
+    setLoading(false);
+  }, []);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     try {
-      await request(`/api/heart-letters/${id}`, { method: "DELETE" });
+      deleteLetter(id);
       setLetters((prev) => prev.filter((l) => l.id !== id));
     } catch { }
   };

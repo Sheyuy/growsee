@@ -3,9 +3,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2, ChevronDown } from "lucide-react";
-import { request } from "@/lib/api/request";
-import { memory } from "@eazo/sdk";
-import type { Child } from "@/lib/db/schema/children";
+import { addChild, addRecord } from "@/lib/demo/store";
+import type { Child } from "@/types";
 
 interface RecordEditorModalProps {
   open: boolean;
@@ -41,28 +40,20 @@ function NewChildForm({ onCreated }: { onCreated: (child: Child) => void }) {
   const [traits, setTraits] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!name.trim()) return;
     setSaving(true);
     try {
-      const res = await request("/api/children", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim(),
-          nickname: nickname.trim() || null,
-          gender,
-          birthDate: birthDate || null,
-          traits: traits.trim() || null,
-        }),
+      const child = addChild({
+        name: name.trim(),
+        nickname: nickname.trim() || null,
+        gender: gender as "boy" | "girl" | "other",
+        birthDate: birthDate || null,
+        avatarEmoji: "🌱",
+        notes: null,
+        parentWish: null,
+        traits: traits.trim() || null,
       });
-      const child: Child = await res.json();
-      memory.reportAction({
-        content: `用户创建了孩子档案：${child.name}`,
-        event_type: "create",
-        page: "home",
-        metadata: { type: "create_child", child_id: child.id },
-      }).catch(() => {});
       onCreated(child);
     } catch {
       //
@@ -169,26 +160,15 @@ export function RecordEditorModal({ open, onClose, activeChild, allChildren, onS
     if (!content.trim()) return;
     setSaving(true);
     try {
-      await request("/api/records", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          childId: selectedChildId ?? null,   // null = 全家/不关联
-          category,
-          title: title.trim() || null,
-          content: content.trim(),
-          mood: mood || null,
-        }),
+      addRecord({
+        childId: selectedChildId ?? null,
+        category,
+        title: title.trim() || null,
+        content: content.trim(),
+        mood: mood || null,
+        photoUrl: null,
+        recordedAt: new Date().toISOString(),
       });
-      const childName = allChildren?.find(c => c.id === selectedChildId)?.name
-        ?? activeChild?.name
-        ?? "全家";
-      memory.reportAction({
-        content: `用户添加了成长记录：${content.slice(0, 60)}`,
-        event_type: "create",
-        page: "home",
-        metadata: { type: "create_growth_record", child_id: selectedChildId, category, child_name: childName },
-      }).catch(() => {});
       setTitle("");
       setContent("");
       setMood("");

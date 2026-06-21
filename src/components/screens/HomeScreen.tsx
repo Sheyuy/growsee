@@ -4,11 +4,10 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, MessageCircle, BookOpen, ChevronRight, Users } from "lucide-react";
-import { useEazo } from "@eazo/sdk/react";
-import { request } from "@/lib/api/request";
-import type { Child } from "@/lib/db/schema/children";
-import type { GrowthRecord } from "@/lib/db/schema/growth-records";
-import type { HomeSummary } from "@/app/api/home/summary/route";
+import { getChildren, getRecords, getHomeSummary } from "@/lib/demo/store";
+import type { Child } from "@/types";
+import type { GrowthRecord } from "@/types";
+import type { HomeSummary } from "@/lib/demo/store";
 import { QuickNoteSheet } from "@/components/QuickNoteSheet";
 import { RecordEditorModal } from "@/components/screens/RecordEditorModal";
 import { QuickSetupGuide } from "@/components/QuickSetupGuide";
@@ -179,9 +178,6 @@ function OnboardingCard({ onAdd }: { onAdd: () => void }) {
 // ── 主组件 ────────────────────────────────────────────────
 export function HomeScreen() {
   const router = useRouter();
-  const user = useEazo((s) => s.auth.user);
-  const authLoading = useEazo((s) => s.auth.loading);
-  
   const [children, setChildren] = useState<Child[]>([]);
   const [recordsMap, setRecordsMap] = useState<Record<string, GrowthRecord[]>>({});
   const [loading, setLoading] = useState(true);
@@ -189,37 +185,27 @@ export function HomeScreen() {
   const [showAddChild, setShowAddChild] = useState(false);
   const [summary, setSummary] = useState<HomeSummary | null>(null);
   const [showGuide, setShowGuide] = useState(false);
+  const [user] = useState<{ name?: string; avatarUrl?: string | null }>({ name: "我" }); // mini-program auto-login
 
-  const loadData = useCallback(async () => {
-    const [kids, summaryData] = await Promise.all([
-      request("/api/children").then(r => r.json()).catch(() => [] as Child[]),
-      request("/api/home/summary").then(r => r.json()).catch(() => null as HomeSummary | null),
-    ]);
+  const loadData = useCallback(() => {
+    const kids = getChildren();
+    const summaryData = getHomeSummary();
     setChildren(kids);
     setSummary(summaryData);
     setShowGuide(kids.length === 0);
     if (kids.length > 0) {
-      const entries = await Promise.all(
-        kids.map(async (k: Child) => {
-          const recs: GrowthRecord[] = await request(`/api/records?childId=${k.id}`)
-            .then(r => r.json()).catch(() => []);
-          return [k.id, recs.slice(0, 3)] as [string, GrowthRecord[]];
-        })
-      );
-      setRecordsMap(Object.fromEntries(entries));
+      const map: Record<string, GrowthRecord[]> = {};
+      for (const k of kids) {
+        map[k.id] = getRecords(k.id).slice(0, 3);
+      }
+      setRecordsMap(map);
     }
     setLoading(false);
   }, []);
 
   useEffect(() => {
-    if (authLoading) return; // auth 还在初始化，先等着
-    if (user) {
-      loadData();
-    } else {
-      // 确认未登录，结束 loading 显示引导
-      setLoading(false);
-    }
-  }, [user, authLoading, loadData]);
+    loadData();
+  }, [loadData]);
 
   const handleAddRecord = () => {
     setShowNote(true);
@@ -282,7 +268,7 @@ export function HomeScreen() {
         </header>
 
         {/* 上次对话情境提示 */}
-        {summary?.lastChatPreview && summary.lastChatDaysAgo !== null && summary.lastChatDaysAgo <= 3 && (
+        {summary?.lastChatPreview && summary.lastChatDaysAgo != null && summary.lastChatDaysAgo <= 3 && (
           <motion.div
             initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
             onClick={() => router.push("/ai-companion")}

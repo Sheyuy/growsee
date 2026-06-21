@@ -4,12 +4,10 @@ import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Loader2 } from "lucide-react";
-import { useEazo } from "@eazo/sdk/react";
-import { request } from "@/lib/api/request";
-import { memory } from "@eazo/sdk";
-import type { Child } from "@/lib/db/schema/children";
-import type { Milestone } from "@/lib/db/schema/milestones";
-import type { GrowthRecord } from "@/lib/db/schema/growth-records";
+import { getChildren, getMilestones, getRecords, addMilestone } from "@/lib/demo/store";
+import type { Child } from "@/types";
+import type { Milestone } from "@/types";
+import type { GrowthRecord } from "@/types";
 
 // ── 五维雷达图 ─────────────────────────────────────────────
 const DIMS = [
@@ -105,58 +103,21 @@ function AddMilestoneSheet({ open, onClose, childId, onSaved }: {
   const [customTypeLabel, setCustomTypeLabel] = useState("");
   const [saving, setSaving] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setPhotoFile(file);
-    const reader = new FileReader();
-    reader.onload = (ev) => setPhotoPreview(ev.target?.result as string);
-    reader.readAsDataURL(file);
-  };
-
-  const uploadPhoto = async (file: File): Promise<string | null> => {
-    try {
-      setUploading(true);
-      // 使用 Eazo SDK 的前端 storage.upload（presigned URL 直传 S3）
-      const { storage } = await import("@eazo/sdk");
-      const ext = file.name.split(".").pop() ?? "jpg";
-      const key = `timeline-photos/${Date.now()}.${ext}`;
-      const result = await storage.upload(key, file);
-      return result.url;
-    } catch {
-      return null;
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!title.trim()) return;
     setSaving(true);
     try {
-      let photoUrl: string | null = null;
-      if (photoFile) {
-        photoUrl = await uploadPhoto(photoFile);
-      }
-      await request("/api/milestones", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          childId,
-          title: title.trim(),
-          description: desc.trim() || null,
-          emoji,
-          milestoneType: milestoneType === "custom" && customTypeLabel.trim() ? customTypeLabel.trim() : milestoneType,
-          occurredAt: new Date(date).toISOString(),
-          photoUrl,
-        }),
+      addMilestone({
+        childId,
+        title: title.trim(),
+        description: desc.trim() || null,
+        emoji,
+        milestoneType: milestoneType === "custom" && customTypeLabel.trim() ? customTypeLabel.trim() : milestoneType,
+        photoUrl: photoPreview,
+        occurredAt: new Date(date).toISOString(),
       });
-      memory.reportAction({ content: `用户添加里程碑：${title}`, event_type: "create", page: "timeline-milestones", metadata: { type: "create_milestone", child_id: childId } }).catch(() => {});
-      setTitle(""); setDesc(""); setEmoji("⭐"); setPhotoPreview(null); setPhotoFile(null); setMilestoneType("custom"); setCustomTypeLabel("");
+      setTitle(""); setDesc(""); setEmoji("⭐"); setPhotoPreview(null); setMilestoneType("custom"); setCustomTypeLabel("");
       onSaved(); onClose();
     } catch { } finally { setSaving(false); }
   };
@@ -230,10 +191,10 @@ function AddMilestoneSheet({ open, onClose, childId, onSaved }: {
                   />
                 )}
               </div>
-              <motion.button whileTap={{ scale: 0.96 }} onClick={handleSave} disabled={!title.trim() || saving || uploading}
+              <motion.button whileTap={{ scale: 0.96 }} onClick={handleSave} disabled={!title.trim() || saving}
                 className="w-full py-3 rounded-xl text-sm font-medium text-white flex items-center justify-center gap-2"
                 style={{ backgroundColor: title.trim() ? "var(--color-primary)" : "var(--color-text-muted)" }}>
-                {(saving || uploading) ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                 保存这个里程碑
               </motion.button>
 
@@ -242,15 +203,27 @@ function AddMilestoneSheet({ open, onClose, childId, onSaved }: {
                 <label className="text-xs font-medium mb-1 block" style={{ color: "var(--color-text-secondary)" }}>
                   添加照片 <span style={{ color: "var(--color-text-muted)" }}>（选填，让回顾更有温度）</span>
                 </label>
-                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
                 {photoPreview ? (
                   <div className="relative">
                     <img src={photoPreview} alt="预览" className="w-full h-36 object-cover rounded-xl" />
-                    <button onClick={() => { setPhotoPreview(null); setPhotoFile(null); }}
+                    <button onClick={() => { setPhotoPreview(null); }}
                       className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/50 text-white flex items-center justify-center text-xs">✕</button>
                   </div>
                 ) : (
-                  <motion.button whileTap={{ scale: 0.97 }} onClick={() => fileInputRef.current?.click()}
+                  <motion.button whileTap={{ scale: 0.97 }} onClick={() => {
+                    // Demo 模式：直接选择文件并展示
+                    const input = document.createElement("input");
+                    input.type = "file";
+                    input.accept = "image/*";
+                    input.onchange = (e) => {
+                      const file = (e.target as HTMLInputElement).files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = (ev) => setPhotoPreview(ev.target?.result as string);
+                      reader.readAsDataURL(file);
+                    };
+                    input.click();
+                  }}
                     className="w-full h-24 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1"
                     style={{ borderColor: "var(--color-border)", color: "var(--color-text-muted)" }}>
                     <span className="text-2xl">📷</span>
@@ -268,30 +241,24 @@ function AddMilestoneSheet({ open, onClose, childId, onSaved }: {
 
 export function TimelineMilestonesScreen() {
   const router = useRouter();
-  const user = useEazo((s) => s.auth.user);
   const [child, setChild] = useState<Child | null>(null);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [allRecords, setAllRecords] = useState<GrowthRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
 
-  const loadData = async (c: Child) => {
-    const [msData, recsData] = await Promise.all([
-      request(`/api/milestones?childId=${c.id}`).then(r => r.json()).catch(() => []),
-      request(`/api/records?childId=${c.id}`).then(r => r.json()).catch(() => []),
-    ]);
-    setMilestones(msData);
-    setAllRecords(recsData);
+  const loadData = (c: Child) => {
+    const ms = getMilestones(c.id);
+    const recs = getRecords(c.id);
+    setMilestones(ms);
+    setAllRecords(recs);
   };
 
   useEffect(() => {
-    if (!user) return;
-    request("/api/children").then((r) => r.json())
-      .then(async (data: Child[]) => {
-        if (data.length > 0) { setChild(data[0]); await loadData(data[0]); }
-        setLoading(false);
-      }).catch(() => setLoading(false));
-  }, [user]);
+    const data = getChildren();
+    if (data.length > 0) { setChild(data[0]); loadData(data[0]); }
+    setLoading(false);
+  }, []);
 
   const NODE_COLORS = ["var(--color-primary)", "var(--color-secondary)", "var(--color-states-warning)", "var(--color-text-muted)"];
 

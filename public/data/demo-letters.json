@@ -1,0 +1,42 @@
+[
+  {
+    "id": "letter-01",
+    "childId": "child-01",
+    "emotion": "joy",
+    "title": "你第一次叫妈妈那天",
+    "content": "今天整理相册，翻到你一岁半时的照片。你坐在餐椅上，手里拿着勺子，突然对着镜头叫了一声「妈妈」。我当时以为听错了，你又叫了一遍。我那时候眼泪就掉下来了。",
+    "isTimeCapsule": true,
+    "revealAtAge": "10岁",
+    "createdAt": "2026-06-01T14:00:00Z"
+  },
+  {
+    "id": "letter-02",
+    "childId": "child-01",
+    "emotion": "wish",
+    "title": "希望你永远不要丢失的东西",
+    "content": "你现在的世界里，蝴蝶是魔法，下雨天是冒险，每一顿晚饭都是「最好吃的一顿」。我希望你长大以后，即使知道了这些事情的真相，也不要失去那份惊奇。",
+    "isTimeCapsule": true,
+    "revealAtAge": "18岁",
+    "createdAt": "2026-05-20T10:00:00Z"
+  },
+  {
+    "id": "letter-03",
+    "childId": "child-02",
+    "emotion": "gratitude",
+    "title": "谢谢你选我做你爸爸",
+    "content": "有一天晚上加班很晚，回到家你已经睡了。我偷偷亲了你的额头，你突然翻身抱住了我的手臂。你没有醒，但我站在那里哭了很久。谢谢你来到我的生命里。",
+    "isTimeCapsule": true,
+    "revealAtAge": "成年后随时",
+    "createdAt": "2026-04-10T22:00:00Z"
+  },
+  {
+    "id": "letter-04",
+    "childId": "child-02",
+    "emotion": "apology",
+    "title": "那次对你发脾气，我很后悔",
+    "content": "那天你打翻了牛奶，我吼了你。你愣在原地，眼泪在眼眶里转了好久，最后说「爸爸对不起」。我后来想，你当时才四岁，怎么打翻牛奶是再正常不过的事。对不起，爸爸不应该那样。",
+    "isTimeCapsule": false,
+    "revealAtAge": null,
+    "createdAt": "2026-03-15T09:00:00Z"
+  }
+]
