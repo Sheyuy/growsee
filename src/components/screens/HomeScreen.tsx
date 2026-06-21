@@ -259,13 +259,6 @@ export function HomeScreen() {
                 <Plus className="w-3 h-3" /> 记瞬间
               </motion.button>
             )}
-            {children.length > 0 && (
-              <motion.button whileTap={{ scale: 0.9 }} onClick={handleAddChild}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full border text-xs font-medium"
-                style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)", backgroundColor: "white" }}>
-                <Plus className="w-3 h-3" /> 添加孩子
-              </motion.button>
-            )}
             <motion.button whileTap={{ scale: 0.95 }} onClick={() => router.push("/profile")}
               className="w-9 h-9 rounded-full border flex items-center justify-center overflow-hidden"
               style={{ borderColor: "var(--color-border)", backgroundColor: "white" }}>
@@ -337,6 +330,18 @@ export function HomeScreen() {
               />
             ))}
           </AnimatePresence>
+
+          {/* 添加孩子卡片 */}
+          {!loading && children.length > 0 && (
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              onClick={handleAddChild}
+              className="w-full rounded-3xl border flex items-center justify-center gap-2 py-3 mb-4"
+              style={{ backgroundColor: "rgba(255,255,255,0.5)", borderColor: "var(--color-border)", borderStyle: "dashed" }}>
+              <Plus className="w-4 h-4" style={{ color: "var(--color-text-muted)" }} />
+              <span className="text-sm font-medium" style={{ color: "var(--color-text-muted)" }}>添加孩子</span>
+            </motion.button>
+          )}
         )}
 
         <div className="h-24" />

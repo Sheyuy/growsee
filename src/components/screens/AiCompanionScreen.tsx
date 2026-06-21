@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { Send, Loader2, RefreshCw, X, ChevronRight } from "lucide-react";
+import { Send, Loader2, RefreshCw, X, ChevronRight, Plus } from "lucide-react";
 import { VoiceInputButton } from "@/components/VoiceInputButton";
 import { getChildren, getQuickPrompts, getReminders } from "@/lib/demo/store";
 import { streamAIReply } from "@/lib/demo/ai-engine";
 import type { Child } from "@/types";
 import { ChildSwitcher } from "@/components/ChildSwitcher";
+import { QuickNoteSheet } from "@/components/QuickNoteSheet";
 
 interface Message {
   id: string;
@@ -89,6 +90,7 @@ export function AiCompanionScreen() {
   const [quickPrompts, setQuickPrompts] = useState<string[]>([]);
   const [loadingPrompts, setLoadingPrompts] = useState(false);
   const [reminders, setReminders] = useState<{ title: string; body: string; urgency: "high" | "normal" }[]>([]);
+  const [showNote, setShowNote] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const sessionId = useRef(crypto.randomUUID());
 
@@ -253,6 +255,23 @@ export function AiCompanionScreen() {
           育见 AI Demo · 仅供参考，不构成医疗诊断
         </p>
       </div>
+
+      {/* 悬浮「记一下」按钮 */}
+      <motion.button
+        whileTap={{ scale: 0.9 }}
+        whileHover={{ scale: 1.05 }}
+        onClick={() => setShowNote(true)}
+        className="fixed bottom-20 right-5 md:bottom-8 w-14 h-14 rounded-full text-white shadow-lg flex items-center justify-center z-40"
+        style={{ backgroundColor: "var(--color-secondary)", boxShadow: "0 8px 24px rgba(211,110,82,0.3)" }}
+        aria-label="记一下">
+        <Plus className="w-6 h-6" strokeWidth={2.5} />
+      </motion.button>
+
+      <QuickNoteSheet
+        open={showNote}
+        onClose={() => setShowNote(false)}
+        onSaved={() => {}}
+      />
     </div>
   );
 }

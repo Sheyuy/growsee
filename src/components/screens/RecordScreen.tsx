@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { Star, Heart, BookOpen, PenLine, Smile } from "lucide-react";
+import { Star, Heart, BookOpen, PenLine, Smile, Plus } from "lucide-react";
 import { getChildren, getRecords, getLetters, getMoodLogs } from "@/lib/demo/store";
 import type { Child } from "@/types";
 import type { GrowthRecord } from "@/types";
@@ -221,7 +221,7 @@ export function RecordScreen() {
               onClick={() => setShowNote(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-white"
               style={{ backgroundColor: "var(--color-primary)" }}>
-              <PenLine className="w-3 h-3" /> 记一下
+              <PenLine className="w-3 h-3" /> 记瞬间
             </motion.button>
           </div>
         </div>
@@ -352,6 +352,17 @@ export function RecordScreen() {
           </div>
         )}
       </div>
+
+      {/* 悬浮「记一下」按钮 */}
+      <motion.button
+        whileTap={{ scale: 0.9 }}
+        whileHover={{ scale: 1.05 }}
+        onClick={() => setShowNote(true)}
+        className="fixed bottom-20 right-5 md:bottom-8 w-14 h-14 rounded-full text-white shadow-lg flex items-center justify-center z-40"
+        style={{ backgroundColor: "var(--color-secondary)", boxShadow: "0 8px 24px rgba(211,110,82,0.3)" }}
+        aria-label="记一下">
+        <Plus className="w-6 h-6" strokeWidth={2.5} />
+      </motion.button>
 
       <QuickNoteSheet
         open={showNote}
