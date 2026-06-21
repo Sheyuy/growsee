@@ -4,6 +4,7 @@ import { Noto_Sans_SC, Noto_Serif_SC } from "next/font/google";
 import { cn } from "@/utils/utils";
 import { Toaster } from "@/components/ui/sonner";
 import { BottomTabBar, SidebarNav } from "@/components/nav/AppNav";
+import { StoreInit } from "@/components/StoreInit";
 
 const notoSans = Noto_Sans_SC({
   subsets: ["latin"],
@@ -83,7 +84,7 @@ export default function RootLayout({
           {/* Main content */}
           <main className="flex-1 md:ml-60 pb-16 md:pb-0 flex flex-col min-h-0">
             <div className="w-full max-w-[640px] mx-auto flex flex-col flex-1 min-h-0">
-              {children}
+              <StoreInit>{children}</StoreInit>
             </div>
           </main>
           {/* Mobile bottom tab bar */}
